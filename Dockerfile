@@ -3,7 +3,7 @@ MAINTAINER tony.pig@gmail.com
 
 RUN echo as of 2017-03-13 && \
     apt-get update && \
-    apt-get install -y python wget vim tree python-pip
+    apt-get install -y python wget vim tree python-pip curl wget htop iotop
 
 
 EXPOSE 8083 8086 8086/udp 8088 8091
