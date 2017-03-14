@@ -96,9 +96,9 @@ It would be a good idea to review the instructions on InfluxDB's documentation o
 Assume we have set up three KVM instances  using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#hosting-on-aws).
 
 Assume that the addressable hostnames for each of the three nodes are as follows:
-* ix0.mycluster
-* ix1.mycluster
-* ix2.mycluster
+* influxdocker1
+* influxdocker2
+* influxdocker3
 
 ### Build Docker Image
 Building influxdb v0.11.1-1 by Dockerfile
@@ -129,7 +129,7 @@ In influxdocker1 :
 ```bash
 docker swarm init
 ```
-To add a worker to this swarm, run the following command:
+To add a worker to this swarm, run the following command in influxdocker2 and influxdocker3: 
 ```bash
 docker swarm join \
     --token SWMTKN-1-4n6p5iomwajgrge23zijnxanm9ai6kfm48mohi2ogkr1mwztp6-coyyt5b7uti9v0msykcbem9wb \
@@ -205,7 +205,7 @@ docker run --detach --name influxcontainer3 \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
     --volume /root/influxdb-volume/wal:/root/influxdb/wal \
     --volume /root/influxdb-volume/hh:/root/influxdb/hh \
-    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091,influxcontainer3:809
+    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091,influxcontainer3:8091
 ```
 
 And so on...
