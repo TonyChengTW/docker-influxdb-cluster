@@ -93,13 +93,19 @@ It would be a good idea to review the instructions on InfluxDB's documentation o
 
 ### Example Cluster Setup
 
-Assume we have set up three EC2 instances on AWS using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#hosting-on-aws). Having followed the instructions, assume two EBS volumes have been mounted at `/mnt/influx` and `/mnt/db`. These volumes are to be mounted to the container at the same location as the host.
+Assume we have set up three KVM instances  using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#hosting-on-aws).
 
 Assume that the addressable hostnames for each of the three nodes are as follows:
 * ix0.mycluster
 * ix1.mycluster
 * ix2.mycluster
 
+### Build Docker Image
+Building influxdb v0.11.1-1 by Dockerfile
+
+```bash
+docker build -t tonychengtw/influxdb-cluster:0.0.1-1 .
+```
 
 ### Patch the configuration
 
@@ -119,22 +125,41 @@ As of InfluxDB `0.10.0`, you *must* patch the `[meta]` section's values for `bin
 
 ### Bring up the first node
 
+In influxdocker1 :
+```bash
+docker swarm init
+```
+To add a worker to this swarm, run the following command:
+```bash
+docker swarm join \
+    --token SWMTKN-1-4n6p5iomwajgrge23zijnxanm9ai6kfm48mohi2ogkr1mwztp6-coyyt5b7uti9v0msykcbem9wb \
+    192.168.141.141:2377
+```
+
+Create a overlay network via Swarm mode
+```bash 
+docker network create --driver overlay --subnet 10.0.9.0/24 --attachable swarm-net1
+```
+
 Update the Envfile with the patched bind addresses or pass them in directly:
 
+### Bring up the master node
 ```bash
-docker run --detach --name ix0 \
-    --env INFLUX___META___BIND_ADDRESS='"ix0.mycluster:8088"' \
-    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix0.mycluster:8091"' \
-    --env INFLUX___HTTP___BIND_ADDRESS='"ix0.mycluster:8086"' \
-    --env-file ./Envfile \
-    --hostname ix0.mycluster \
+docker run --detach --name influxcontainer1 \
+    --network swarm-net1 \
+    --env INFLUX___META___BIND_ADDRESS='"influxcontainer1:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer1:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer1:8086"' \
+    --hostname influxcontainer1 \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \
     --publish 8091:8091 \
-    --volume /mnt/db:/mnt/db \
-    --volume /mnt/influx:/mnt/influx \
-    amancevice/influxdb-cluster
+    --volume /root/influxdb-volume/meta:/root/influxdb/meta \
+    --volume /root/influxdb-volume/db:/root/influxdb/db \
+    --volume /root/influxdb-volume/wal:/root/influxdb/wal \
+    --volume /root/influxdb-volume/hh:/root/influxdb/hh \
+    tonychengtw/influxdb-cluster:0.0.1
 ```
 
 
@@ -143,19 +168,21 @@ docker run --detach --name ix0 \
 The second follower node is started almost identically to the first node, altering the `CMD` to join to the leader on port `8091`:
 
 ```bash
-docker run --detach --name ix1 \
-    --env INFLUX___META___BIND_ADDRESS='"ix1.mycluster:8088"' \
-    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix1.mycluster:8091"' \
-    --env INFLUX___HTTP___BIND_ADDRESS='"ix1.mycluster:8086"' \
-    --env-file ./Envfile \
-    --hostname ix1.mycluster \
+docker run --detach --name influxcontainer2 \
+    --network swarm-net1 \
+    --env INFLUX___META___BIND_ADDRESS='"influxcontainer2:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer2:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer2:8086"' \
+    --hostname influxcontainer2 \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \
     --publish 8091:8091 \
-    --volume /mnt/db:/mnt/db \
-    --volume /mnt/influx:/mnt/influx \
-    amancevice/influxdb-cluster -join ix0.mycluster:8091
+    --volume /root/influxdb-volume/meta:/root/influxdb/meta \
+    --volume /root/influxdb-volume/db:/root/influxdb/db \
+    --volume /root/influxdb-volume/wal:/root/influxdb/wal \
+    --volume /root/influxdb-volume/hh:/root/influxdb/hh \
+    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091
 ```
 
 
@@ -164,19 +191,21 @@ docker run --detach --name ix1 \
 Bring up the third follower node following this pattern:
 
 ```bash
-docker run --detach --name ix2 \
-    --env INFLUX___META___BIND_ADDRESS='"ix2.mycluster:8088"' \
-    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix2.mycluster:8091"' \
-    --env INFLUX___HTTP___BIND_ADDRESS='"ix2.mycluster:8086"' \
-    --env-file ./Envfile \
-    --hostname ix2.mycluster \
+docker run --detach --name influxcontainer3 \
+    --network swarm-net1 \
+    --env INFLUX___META___BIND_ADDRESS='"influxcontainer3:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer3:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer3:8086"' \
+    --hostname influxcontainer3 \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \
     --publish 8091:8091 \
-    --volume /mnt/db:/mnt/db \
-    --volume /mnt/influx:/mnt/influx \
-    amancevice/influxdb-cluster -join ix0.mycluster:8091
+    --volume /root/influxdb-volume/meta:/root/influxdb/meta \
+    --volume /root/influxdb-volume/db:/root/influxdb/db \
+    --volume /root/influxdb-volume/wal:/root/influxdb/wal \
+    --volume /root/influxdb-volume/hh:/root/influxdb/hh \
+    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091,influxcontainer3:809
 ```
 
 And so on...
