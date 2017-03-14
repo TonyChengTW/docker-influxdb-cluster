@@ -150,16 +150,13 @@ docker run --detach --name influxcontainer1 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer1:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer1:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer1:8086"' \
+    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer1:8083"' \
     --hostname influxcontainer1 \
-    --publish 8083:8083 \
-    --publish 8086:8086 \
-    --publish 8088:8088 \
-    --publish 8091:8091 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
     --volume /root/influxdb-volume/wal:/root/influxdb/wal \
     --volume /root/influxdb-volume/hh:/root/influxdb/hh \
-    tonychengtw/influxdb-cluster:0.0.1
+    tonychengtw/influxdb-cluster:0.0.1-1
 ```
 
 
@@ -168,21 +165,18 @@ docker run --detach --name influxcontainer1 \
 The second follower node is started almost identically to the first node, altering the `CMD` to join to the leader on port `8091`:
 
 ```bash
-docker run --detach --name influxcontainer2 \
+# docker run --detach --name influxcontainer2 \
     --network swarm-net1 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer2:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer2:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer2:8086"' \
+    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer2:8083"' \
     --hostname influxcontainer2 \
-    --publish 8083:8083 \
-    --publish 8086:8086 \
-    --publish 8088:8088 \
-    --publish 8091:8091 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
     --volume /root/influxdb-volume/wal:/root/influxdb/wal \
     --volume /root/influxdb-volume/hh:/root/influxdb/hh \
-    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091
+    tonychengtw/influxdb-cluster:0.0.1-1 -join influxcontainer1:8091,influxcontainer2:8091
 ```
 
 
@@ -196,16 +190,13 @@ docker run --detach --name influxcontainer3 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer3:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer3:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer3:8086"' \
+    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer3:8083"' \
     --hostname influxcontainer3 \
-    --publish 8083:8083 \
-    --publish 8086:8086 \
-    --publish 8088:8088 \
-    --publish 8091:8091 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
     --volume /root/influxdb-volume/wal:/root/influxdb/wal \
     --volume /root/influxdb-volume/hh:/root/influxdb/hh \
-    tonychengtw/influxdb-cluster:0.0.1 -join influxcontainer1:8091,influxcontainer2:8091,influxcontainer3:8091
+	tonychengtw/influxdb-cluster:0.0.1-1 -join influxcontainer1:8091,influxcontainer2:8091,influxcontainer3:8091
 ```
 
 And so on...
