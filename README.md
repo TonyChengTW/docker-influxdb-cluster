@@ -82,7 +82,7 @@ Instead of patching individual options, an entire configuration can be mounted i
 docker run --rm --interactive --tty \
     --env INFLUXD_CONFIG=/influxdb/influxdb.conf \
     --volume $(pwd)/example:/influxdb \
-    amancevice/influxdb-cluster
+    tonychengtw/influxdb-cluster:0.0.1-1
 ```
 
 
@@ -146,11 +146,12 @@ Update the Envfile with the patched bind addresses or pass them in directly:
 ### Bring up the master node
 ```bash
 docker run --detach --name influxcontainer1 \
+    -p 8083:8083 -p 8086:8086 -p 8091:8091 \
     --network swarm-net1 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer1:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer1:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer1:8086"' \
-    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer1:8083"' \
+    --env INFLUX___ADMIN___ENABLED='true' \
     --hostname influxcontainer1 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
@@ -166,11 +167,12 @@ The second follower node is started almost identically to the first node, alteri
 
 ```bash
 # docker run --detach --name influxcontainer2 \
+    -p 8083:8083 -p 8086:8086 -p 8091:8091 \
     --network swarm-net1 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer2:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer2:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer2:8086"' \
-    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer2:8083"' \
+    --env INFLUX___ADMIN___ENABLED='true' \
     --hostname influxcontainer2 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
@@ -186,11 +188,12 @@ Bring up the third follower node following this pattern:
 
 ```bash
 docker run --detach --name influxcontainer3 \
+    -p 8083:8083 -p 8086:8086 -p 8091:8091 \
     --network swarm-net1 \
     --env INFLUX___META___BIND_ADDRESS='"influxcontainer3:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"influxcontainer3:8091"' \
     --env INFLUX___HTTP___BIND_ADDRESS='"influxcontainer3:8086"' \
-    --env INFLUX___ADMIN___BIND_ADDRESS='"influxcontainer3:8083"' \
+    --env INFLUX___ADMIN___ENABLED='true' \
     --hostname influxcontainer3 \
     --volume /root/influxdb-volume/meta:/root/influxdb/meta \
     --volume /root/influxdb-volume/db:/root/influxdb/db \
